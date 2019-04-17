@@ -2,10 +2,14 @@
   "name": "typesafe-di",
   "version": "0.0.1",
   "main": "index.js",
+  "types": "lib/index.d.ts",
   "repository": "https://github.com/jooohn/typesafe-di.git",
   "author": "jooohn <jooohn12341234@gmail.com>",
   "license": "MIT",
   "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
     "test": "jest",
     "test:watch": "jest --watch",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -16,6 +20,7 @@
     "@types/jest": "^24.0.11",
     "@typescript-eslint/eslint-plugin": "^1.6.0",
     "@typescript-eslint/parser": "^1.6.0",
+    "delayed-stream": "^1.0.0",
     "eslint": "^5.16.0",
     "eslint-config-prettier": "^4.1.0",
     "eslint-plugin-prettier": "^3.0.1",
@@ -24,6 +29,7 @@
     "ts-jest": "^24.0.2",
     "typescript": "^3.4.3"
   },
+  "files": ["lib/**/*"],
   "jest": {
     "transform": {
       "^.+\\.(t|j)sx?$": "ts-jest"

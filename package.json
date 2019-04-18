@@ -1,6 +1,6 @@
 {
   "name": "typesafe-di",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "repository": "https://github.com/jooohn/typesafe-di.git",
@@ -29,7 +29,9 @@
     "ts-jest": "^24.0.2",
     "typescript": "^3.4.3"
   },
-  "files": ["lib/**/*"],
+  "files": [
+    "lib/**/*"
+  ],
   "jest": {
     "transform": {
       "^.+\\.(t|j)sx?$": "ts-jest"

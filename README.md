@@ -32,7 +32,7 @@ const design = Design.empty
 ```typescript
 // The design can resolve with missing values.
 const { container } = await design.resolve({ name: 'jooohn' });
-// { name: 'jooohn', age: 30, user: User { name: 'jooohn' } }
+// { name: 'jooohn', age: 30, user: User { name: 'jooohn', age: 30 } }
 
 // If the dependencies are insufficient, its compile fails.
 const { container } = await design.resolve({}); // compile error! Property 'name' is missing in type {}

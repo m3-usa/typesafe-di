@@ -1,7 +1,7 @@
 {
   "name": "typesafe-di",
   "version": "0.0.1",
-  "main": "index.js",
+  "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "repository": "https://github.com/jooohn/typesafe-di.git",
   "author": "jooohn <jooohn12341234@gmail.com>",

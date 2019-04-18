@@ -3,7 +3,7 @@
   "version": "0.0.2",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "repository": "https://github.com/jooohn/typesafe-di.git",
+  "repository": "https://github.com/m3dev/typesafe-di.git",
   "author": "jooohn <jooohn12341234@gmail.com>",
   "license": "MIT",
   "scripts": {

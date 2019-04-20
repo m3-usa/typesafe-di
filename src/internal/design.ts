@@ -15,8 +15,6 @@ export type Resolve<V, D> = (injector: Injector<D>) => Promise<V>;
 
 export type PromisesHandler = (ps: Promise<void>[]) => Promise<void>;
 
-type Merge<T, U> = { [P in Exclude<keyof T, keyof U>]: T[P] } & U;
-
 type Resolvable<V, D> = (injector: Injector<D>) => V | Promise<V>;
 
 const toResource = <V, D>(
@@ -52,16 +50,6 @@ type Requirements<T> = { [P in Exclude<keyof ShouldResolve<T>, keyof T>]: Should
         // Prohibit from instantiating if required type conflicts.
         [P in ConflictedKeys<T>]: never
     };
-
-interface Test {
-    needsKey0: Resource<number, { key0: string }>;
-    key0: Resource<number, {}>;
-    needsKey1: Resource<number, { key1: string }>;
-    key1: Resource<string, {}>;
-    needsKey2: Resource<number, { key3: string }>;
-}
-type B = ConflictedKeys<Test>;
-type A = Requirements<Test>;
 
 export interface Result<T> {
     container: Container<T>;

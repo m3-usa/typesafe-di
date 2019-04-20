@@ -12,15 +12,13 @@
     "prepublishOnly": "npm test && npm run lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "format": "prettier --write \"src/**/*.ts\"",
-    "lint": "eslint \"src/**/*.ts\"",
-    "lint-fix": "eslint --fix \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\" && eslint --fix \"src/**/*.ts\"",
+    "lint": "eslint \"src/**/*.ts\""
   },
   "devDependencies": {
     "@types/jest": "^24.0.11",
     "@typescript-eslint/eslint-plugin": "^1.6.0",
     "@typescript-eslint/parser": "^1.6.0",
-    "delayed-stream": "^1.0.0",
     "eslint": "^5.16.0",
     "eslint-config-prettier": "^4.1.0",
     "eslint-plugin-prettier": "^3.0.1",

@@ -1,6 +1,6 @@
 {
   "name": "typesafe-di",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "repository": "https://github.com/m3dev/typesafe-di.git",

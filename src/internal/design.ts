@@ -27,30 +27,25 @@ const toResource = <V, D>(
 
 type Values<T> = T[keyof T];
 
-type DependencyGraph<T> = { [P in keyof T]: T[P] extends Resource<any, infer D> ? D : never };
+type DependencyMap<T> = { [P in keyof T]: T[P] extends Resource<any, infer D> ? D : never };
 
-type DependentKeys<T> = Values<{ [P in keyof DependencyGraph<T>]: keyof DependencyGraph<T>[P] }>;
+type DependentKeys<T> = Values<{ [P in keyof DependencyMap<T>]: keyof DependencyMap<T>[P] }>;
 
-type Equals<T, U> = Exclude<U, T> extends never ? T : never;
-type UnifiedValue<T> = Values<{ [P in keyof T]: Equals<T[P], Values<T>> }>;
+type ExactOneValue<T> = Values<{ [P in keyof T]: Exclude<Values<T>, T[P]> extends never ? T[P] : never }>;
 
-type ShouldResolve<T> = {
-    [P in DependentKeys<T>]: UnifiedValue<
-        { [P2 in keyof DependencyGraph<T>]: P extends keyof DependencyGraph<T>[P2] ? DependencyGraph<T>[P2][P] : never }
-    >
-};
+type DependentValue<T, K> = ExactOneValue<
+    { [P in keyof DependencyMap<T>]: K extends keyof DependencyMap<T>[P] ? DependencyMap<T>[P][K] : never }
+>;
+
+type ShouldResolve<T> = { [P in DependentKeys<T>]: DependentValue<T, P> };
 
 type ConflictedKeys<T> = Values<
-    {
-        [P in keyof ShouldResolve<T> & keyof T]: P extends keyof T
-            ? (Container<T>[P] extends ShouldResolve<T>[P] ? never : P)
-            : never
-    }
+    { [P in Extract<keyof ShouldResolve<T>, keyof T>]: Container<T>[P] extends ShouldResolve<T>[P] ? never : P }
 >;
 
 type Requirements<T> = { [P in Exclude<keyof ShouldResolve<T>, keyof T>]: ShouldResolve<T>[P] } &
     {
-        // Prohibit from instantiating if required type conflicts.
+        // Prohibit from instantiation if required type conflicts.
         [P in ConflictedKeys<T>]: never
     };
 

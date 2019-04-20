@@ -31,8 +31,11 @@ type DependencyGraph<T> = { [P in keyof T]: T[P] extends Resource<any, infer D> 
 
 type DependentKeys<T> = Values<{ [P in keyof DependencyGraph<T>]: keyof DependencyGraph<T>[P] }>;
 
+type Equals<T, U> = Exclude<U, T> extends never ? T : never;
+type UnifiedValue<T> = Values<{ [P in keyof T]: Equals<T[P], Values<T>> }>;
+
 type ShouldResolve<T> = {
-    [P in DependentKeys<T>]: Values<
+    [P in DependentKeys<T>]: UnifiedValue<
         { [P2 in keyof DependencyGraph<T>]: P extends keyof DependencyGraph<T>[P2] ? DependencyGraph<T>[P2][P] : never }
     >
 };

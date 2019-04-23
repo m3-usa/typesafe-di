@@ -9,9 +9,10 @@
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build",
-    "prepublishOnly": "npm test && npm run lint",
+    "prepublishOnly": "npm test && npm run dtslint && npm run lint",
     "test": "jest",
     "test:watch": "jest --watch",
+    "dtslint": "dtslint --expectOnly typing-test",
     "format": "prettier --write \"src/**/*.ts\" && eslint --fix \"src/**/*.ts\"",
     "lint": "eslint \"src/**/*.ts\""
   },
@@ -20,6 +21,7 @@
     "@typescript-eslint/eslint-plugin": "^1.6.0",
     "@typescript-eslint/parser": "^1.6.0",
     "delayed-stream": "^1.0.0",
+    "dtslint": "^0.7.0",
     "eslint": "^5.16.0",
     "eslint-config-prettier": "^4.1.0",
     "eslint-plugin-prettier": "^3.0.1",
@@ -42,6 +44,10 @@
       "jsx",
       "json",
       "node"
+    ],
+    "testPathIgnorePatterns": [
+      "node_modules",
+      "typing-test"
     ]
   }
 }

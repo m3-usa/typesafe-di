@@ -19,7 +19,7 @@ type HasName = { name: string };
 type HasAge = { age: number };
 
 // Design is an immutable blueprint of a container which knows how to build each item.
-const design = Design.empty
+const design = Design
   .bind('age', () => 30)
   // Injector<{ [key]: T }> is just a type alias of { [key]: Promise<T> }.
   // Here, it means we need { name: string, age: number } to create a user.
@@ -43,17 +43,17 @@ const { container } = await design.resolve({}); // compile error! Property 'name
 ### Design is composable
 
 ```typescript
-const useCaseDesign = Design.empty
+const useCaseDesign = Design
   .bind('createUser', async (injector: Injector<HasUserRepository>) => new CreateUser({
     userRepository: await injector.userRepository
   }));
 
-const productionAdapter = Design.empty
+const productionAdapter = Design
   .bind('userRepository', async (injector: Injector<HasDB>) => new DBUserRepository({
     db: await injector.db
   }));
 
-const testAdapter = Design.empty
+const testAdapter = Design
   .bind('userRepository', () => new InMemoryUserRepository());
 
 // for production
@@ -63,11 +63,27 @@ useCaseDesign.merge(productionAdapter).resolve({ db: productionDB });
 useCaseDesign.merge(testAdapter).resolve({});
 ```
 
+### injector assumes current design by default
+
+```typescript
+Design
+  .bind('nums', async () => [1, 2, 3, 4, 5])
+  .bind('double', async () => (num: number) => num * 2)
+  // Here `injector` assumes existing `nums` and `double` are injectable by default.
+  .bind('implicit', async (injector) => {
+    const nums = await injector.nums;
+    const double = await injector.double;
+    return nums.map(double);
+  })
+  // Or you can specify requirements explicitly.
+  .bind('explicit', async (injector: Injector<{ bool: boolean }>) => !(await injector.bool));
+```
+
 ### Finalize resource
 
 ```typescript
 // The third argument for `bind` is an optional finalizer of the resource.
-const design = Design.empty
+const design = Design
   .bind('db', () => buildDB(), db => db.close)
   .bind(
     'repository',

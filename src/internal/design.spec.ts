@@ -12,19 +12,35 @@ describe('Design', () => {
     const resolveKey2 = async (injector: Injector<HasKey1>) => injector.key1.then(n => `key1 is ${n}`);
     const resolveKey3 = async (injector: Injector<HasKey2>) => injector.key2.then(s => s === 'key1 is 123');
 
+    describe('bind', () => {
+        it('infers existing container type as injectoable by default', async () => {
+            await Design.bind('key1', () => 123)
+                .bind('key2', () => 'test')
+                .bind('inferred', async injector => `${await injector.key1}-${await injector.key2}`)
+                .resolve({});
+        });
+
+        it('takes explicit injector type parameter', async () => {
+            await Design.bind('key1', () => 123)
+                .bind('key2', () => 'test')
+                .bind('explicit', async (injector: Injector<{ key0: number }>) => await injector.key0)
+                .resolve({ key0: 0 });
+        });
+    });
+
     describe('resolve', () => {
         describe('with valid dependencies', () => {
             it('resolves design', async () => {
-                const design = Design.empty.bind('key1', resolveKey1).bind('key2', resolveKey2);
+                const design = Design.bind('key1', resolveKey1).bind('key2', resolveKey2);
                 const { container } = await design.resolve({});
                 expect(container).toEqual({ key1: 123, key2: 'key1 is 123' });
             });
 
             describe('with merge', () => {
                 it('resolves with merged design', async () => {
-                    const design1 = Design.empty.bind('key1', resolveKey1).bind('key2', resolveKey2);
+                    const design1 = Design.bind('key1', resolveKey1).bind('key2', resolveKey2);
 
-                    const design2 = Design.empty.bind('key3', resolveKey3);
+                    const design2 = Design.bind('key3', resolveKey3);
 
                     const { container } = await design1.merge(design2).resolve({});
                     expect(container).toEqual({
@@ -42,11 +58,10 @@ describe('Design', () => {
             }
             let counter = 0;
 
-            const design = Design.empty
-                .bind('sideEffect', () => {
-                    counter += 1;
-                    return 10;
-                })
+            const design = Design.bind('sideEffect', () => {
+                counter += 1;
+                return 10;
+            })
                 .bind('dependent1', (injector: Injector<HasSideEffect>) =>
                     injector.sideEffect.then(num => `${num} from dependent1`),
                 )
@@ -64,7 +79,7 @@ describe('Design', () => {
         });
 
         it('throws an error for self dependencies', async () => {
-            const design = Design.empty.bind('self', (r: Injector<{ self: number }>) => r.self);
+            const design = Design.bind('self', (r: Injector<{ self: number }>) => r.self);
 
             return design.resolve({}).then(
                 () => {
@@ -85,9 +100,10 @@ describe('Design', () => {
             interface HasKey2 {
                 key2: number;
             }
-            const design = Design.empty
-                .bind('key1', (r: Injector<HasKey2>) => r.key2)
-                .bind('key2', (r: Injector<HasKey1>) => r.key1);
+            const design = Design.bind('key1', (r: Injector<HasKey2>) => r.key2).bind(
+                'key2',
+                (r: Injector<HasKey1>) => r.key1,
+            );
 
             return design.resolve({}).then(
                 () => {
@@ -108,8 +124,7 @@ describe('Design', () => {
                 called.push(key);
             };
 
-            const design = Design.empty
-                .bind('key1', resolveKey1, callWith('key1', 123))
+            const design = Design.bind('key1', resolveKey1, callWith('key1', 123))
                 .bind('key2', resolveKey2, callWith('key2', 'key1 is 123'))
                 .bind('key3', resolveKey3, callWith('key3', true as boolean));
             const { finalize } = await design.resolve({});
@@ -130,15 +145,13 @@ describe('Design', () => {
         });
 
         it('can use own error handler', async () => {
-            const { finalize } = await Design.empty
-                .bind(
-                    'key1',
-                    () => 123,
-                    async () => {
-                        throw new Error('fails');
-                    },
-                )
-                .resolve({});
+            const { finalize } = await Design.bind(
+                'key1',
+                () => 123,
+                async () => {
+                    throw new Error('fails');
+                },
+            ).resolve({});
             await finalize(async ps => {
                 try {
                     await Promise.all(ps);

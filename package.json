@@ -1,12 +1,18 @@
 {
   "name": "typesafe-di",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "repository": "https://github.com/m3dev/typesafe-di.git",
   "author": "jooohn <jooohn12341234@gmail.com>",
   "license": "MIT",
-  "keywords": ["di", "ioc", "dependency injection", "dependency inversion", "inversion of control"],
+  "keywords": [
+    "di",
+    "ioc",
+    "dependency injection",
+    "dependency inversion",
+    "inversion of control"
+  ],
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build",

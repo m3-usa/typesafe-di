@@ -6,6 +6,7 @@
   "repository": "https://github.com/m3dev/typesafe-di.git",
   "author": "jooohn <jooohn12341234@gmail.com>",
   "license": "MIT",
+  "keywords": ["di", "ioc", "dependency injection", "dependency inversion", "inversion of control"],
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build",

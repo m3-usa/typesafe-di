@@ -1,4 +1,5 @@
 import { resolve } from './resolver';
+import { empty } from 'parsimmon';
 
 export interface Resource<T, D> {
     resolve: Resolve<T, D>;
@@ -81,7 +82,7 @@ export type Container<T> = { [P in keyof T]: T[P] extends Resource<infer V, any>
 export class Design<T extends Underlying> {
     private constructor(public readonly design: T) {}
 
-    public bind = <K extends string, V, D>(
+    public bind = <K extends string, V, D = Container<T>>(
         key: K,
         resolvable: Resolvable<V, D>,
         finalize: (item: V) => Promise<void> = () => Promise.resolve(),
@@ -114,4 +115,6 @@ export class Design<T extends Underlying> {
     };
 
     public static empty: Design<{}> = new Design({});
+
+    public static bind = Design.empty.bind;
 }

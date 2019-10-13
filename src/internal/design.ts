@@ -6,8 +6,13 @@ export interface Resource<T, D> {
     finalize: (item: T) => Promise<void>;
 }
 
-export interface Underlying {
-    [key: string]: Resource<any, any>;
+export interface Definition {
+    [key: string]: {
+        dependencies: {
+            [key: string]: any;
+        };
+        value: any;
+    };
 }
 
 export type Injector<T extends { [key: string]: any }> = { [P in keyof T]: Promise<T[P]> };
@@ -26,36 +31,32 @@ const toResource = <V, D>(
     finalize,
 });
 
-type Values<T> = T[keyof T];
-
-type DependencyMap<T> = { [P in keyof T]: T[P] extends Resource<any, infer D> ? D : never };
-
-type DependentKeys<T> = Values<{ [P in keyof DependencyMap<T>]: keyof DependencyMap<T>[P] }>;
-
-type ExactOneValue<T> = Values<{ [P in keyof T]: Exclude<Values<T>, T[P]> extends never ? T[P] : never }>;
-
-type DependentValue<T, K> = ExactOneValue<
-    { [P in keyof DependencyMap<T>]: K extends keyof DependencyMap<T>[P] ? DependencyMap<T>[P][K] : never }
+type ExactOneValue<T> = { [P in keyof T]: Exclude<T[keyof T], T[P]> extends never ? T[P] : never }[keyof T];
+type DependentValue<T extends Definition, K> = ExactOneValue<
+    { [P in keyof T]: K extends keyof T[P]['dependencies'] ? T[P]['dependencies'][K] : never }
 >;
+type BoundKeys<T extends Definition> = Extract<{ [P in keyof T]: keyof T[P]['dependencies'] }[keyof T], keyof T>;
+type MissingKeys<T extends Definition> = Exclude<{ [P in keyof T]: keyof T[P]['dependencies'] }[keyof T], keyof T>;
+type MissingDependencies<T extends Definition> = { [P in MissingKeys<T>]: DependentValue<T, P> };
 
-type ShouldResolve<T> = { [P in DependentKeys<T>]: DependentValue<T, P> };
+type ConflictedKeys<T extends Definition> = {
+    [P in BoundKeys<T>]: T[P]['value'] extends DependentValue<T, P> ? never : P
+}[BoundKeys<T>];
 
-type ConflictedKeys<T> = Values<
-    { [P in Extract<keyof ShouldResolve<T>, keyof T>]: Container<T>[P] extends ShouldResolve<T>[P] ? never : P }
->;
-
-type Requirements<T> = { [P in Exclude<keyof ShouldResolve<T>, keyof T>]: ShouldResolve<T>[P] } &
+type Requirements<T extends Definition> = MissingDependencies<T> &
     {
         // Prohibit from instantiation if required type conflicts.
         [P in ConflictedKeys<T>]: never
     };
 
-export interface Result<T> {
+export interface Result<T extends Definition> {
     container: Container<T>;
     finalize: (promisesHandler?: PromisesHandler) => Promise<void>;
 }
 
-export type Container<T> = { [P in keyof T]: T[P] extends Resource<infer V, any> ? V : never };
+export type Container<T extends Definition> = { [P in keyof T]: T[P]['value'] };
+
+export type Underlying<T extends Definition> = { [P in keyof T]: Resource<T[P]['value'], T[P]['dependencies']> };
 
 /**
  * Design represents key-value styled dependency graph which can detect which dependent key is missing at compile time.
@@ -79,32 +80,36 @@ export type Container<T> = { [P in keyof T]: T[P] extends Resource<infer V, any>
  * see specs for more examples!
  *
  */
-export class Design<T extends Underlying> {
-    private constructor(public readonly design: T) {}
+export class Design<T extends Definition> {
+    private constructor(public readonly design: Underlying<T>) {}
 
-    public bind = <K extends string, V, D = Container<T>>(
+    public bind = <K extends string, V, D>(
         key: K,
-        resolvable: Resolvable<V, D>,
+        resolvable: Resolvable<V, Container<T> & D>,
         finalize: (item: V) => Promise<void> = () => Promise.resolve(),
-    ): Design<T & { [key in K]: Resource<V, D> }> =>
-        new Design({
+    ): Design<T & { [key in K]: { dependencies: D; value: V } }> => {
+        const underlying: Underlying<T & { [key in K]: { dependencies: D; value: V } }> = {
             ...this.design,
             [key]: toResource(resolvable, finalize),
-        });
+        };
+        return new Design(underlying);
+    };
 
-    public merge = <U extends Underlying>(that: Design<U>): Design<T & U> =>
-        new Design({
+    public merge = <U extends Definition>(that: Design<U>): Design<T & U> => {
+        const underlying: Underlying<T & U> = {
             ...this.design,
             ...that.design,
-        });
+        };
+        return new Design(underlying);
+    };
 
     public resolve = (requirements: Requirements<T>): Promise<Result<T>> =>
         resolve(this.merge(Design.pure(requirements)).design);
 
-    public static pure = <T extends { [key: string]: any }>(
-        mapping: T,
-    ): Design<{ [P in keyof T]: Resource<T[P], {}> }> => {
-        const design: { [P in keyof T]: Resource<T[P], {}> } = {} as any;
+    public static pure = <U extends { [key: string]: any }>(
+        mapping: U,
+    ): Design<{ [P in keyof U]: { dependencies: {}; value: U[P] } }> => {
+        const design: Underlying<{ [P in keyof U]: { dependencies: {}; value: U[P] } }> = {} as any;
         for (const key in mapping) {
             design[key] = {
                 resolve: () => Promise.resolve(mapping[key]),

@@ -1,11 +1,11 @@
 import { DAG } from './dag';
-import { Container, Result, Underlying, PromisesHandler } from './design';
+import { Container, Result, Definition, PromisesHandler, Underlying } from './design';
 
-type Injector<T> = { [P in keyof T]: Promise<Value<T, P>> };
-type WrappedInjector<T> = { [P in keyof T]: (dependedBy?: keyof T) => Promise<Value<T, P>> };
-type Value<T, K extends keyof T> = Container<T>[K];
+type Injector<T extends Definition> = { [P in keyof T]: Promise<Value<T, P>> };
+type WrappedInjector<T extends Definition> = { [P in keyof T]: (dependedBy?: keyof T) => Promise<Value<T, P>> };
+type Value<T extends Definition, K extends keyof T> = T[K]['value'];
 
-const bindInjector = <T>(wrapped: WrappedInjector<T>, dependedBy: keyof T): Injector<T> => {
+const bindInjector = <T extends Definition>(wrapped: WrappedInjector<T>, dependedBy: keyof T): Injector<T> => {
     const injector: Injector<T> = {} as any;
     for (const key in wrapped) {
         Object.defineProperty(injector, key, {
@@ -17,8 +17,8 @@ const bindInjector = <T>(wrapped: WrappedInjector<T>, dependedBy: keyof T): Inje
     return injector;
 };
 
-const wrapResolve = <T extends Underlying, K extends keyof T>(context: {
-    underlying: T;
+const wrapResolve = <T extends Definition, K extends keyof T>(context: {
+    underlying: Underlying<T>;
     dag: DAG<keyof T>;
     wrappedInjector: WrappedInjector<T>;
 }) => (key: K) => {
@@ -32,7 +32,7 @@ const wrapResolve = <T extends Underlying, K extends keyof T>(context: {
         }
         if (typeof resolved === 'undefined') {
             const injector = bindInjector(wrappedInjector, key);
-            resolved = underlying[key].resolve(injector).catch(e => {
+            resolved = underlying[key].resolve(injector as any).catch(e => {
                 if (e.hasOwnProperty('__root_error__')) {
                     throw e;
                 } else {
@@ -46,7 +46,7 @@ const wrapResolve = <T extends Underlying, K extends keyof T>(context: {
     };
 };
 
-const buildContainer = async <T>(injector: WrappedInjector<T>): Promise<Container<T>> => {
+const buildContainer = async <T extends Definition>(injector: WrappedInjector<T>): Promise<Container<T>> => {
     const container: Container<T> = {} as any;
 
     const promises: Promise<any>[] = [];
@@ -65,10 +65,10 @@ const defaultPromisesHandler: PromisesHandler = async ps => {
     await Promise.all(ps);
 };
 
-const buildFinalize = <T extends Underlying>(context: {
+const buildFinalize = <T extends Definition>(context: {
     container: Container<T>;
     dag: DAG<keyof T>;
-    underlying: T;
+    underlying: Underlying<T>;
 }) => {
     let finalized = false;
     return async (promisesHandler: PromisesHandler = defaultPromisesHandler): Promise<void> => {
@@ -85,7 +85,7 @@ const buildFinalize = <T extends Underlying>(context: {
     };
 };
 
-export async function resolve<T extends Underlying>(underlying: T): Promise<Result<T>> {
+export async function resolve<T extends Definition>(underlying: Underlying<T>): Promise<Result<T>> {
     const dag = new DAG<keyof T>();
     const wrappedInjector: WrappedInjector<T> = {} as any;
     const resolveFor = wrapResolve({

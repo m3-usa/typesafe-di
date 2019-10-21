@@ -83,7 +83,7 @@ export type Underlying<T extends Definition> = { [P in keyof T]: Resource<T[P]['
 export class Design<T extends Definition> {
     private constructor(public readonly design: Underlying<T>) {}
 
-    public bind = <K extends string, V, D>(
+    public bind = <K extends string, V, D = {}>(
         key: K,
         resolvable: Resolvable<V, Container<T> & D>,
         finalize: (item: V) => Promise<void> = () => Promise.resolve(),

@@ -27,3 +27,8 @@ const implicitAndExplicitInjector = Design.bind('nums', async () => [1, 2, 3, 4,
     // Or you can specify requirements explicitly.
     .bind('explicit', async (injector: Injector<{ bool: boolean }>) => !(await injector.bool))
     .resolve({ bool: true });
+
+const zeroDependencies = Design.bind('zero', () => 3);
+Design.bind('needsA', async (injector: Injector<{ a: number }>) => await injector.a)
+    .merge(zeroDependencies)
+    .resolve({}); // $ExpectError

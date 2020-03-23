@@ -33,6 +33,9 @@ const wrapResolve = <T extends Definition, K extends keyof T>(context: {
         if (typeof resolved === 'undefined') {
             const injector = bindInjector(wrappedInjector, key);
             resolved = underlying[key].resolve(injector as any).catch(e => {
+                console.error(`Caught error: ${e}, ${JSON.stringify(e, null, 2)}`);
+                console.log(`using injector: ${JSON.stringify(injector, null, 2)} for key: "${key}"`);
+                console.trace();
                 if (e.hasOwnProperty('__root_error__')) {
                     throw e;
                 } else {

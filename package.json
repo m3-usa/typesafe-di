@@ -22,7 +22,8 @@
     "test:watch": "jest --watch",
     "dtslint": "dtslint --expectOnly typing-test",
     "format": "prettier --write \"src/**/*.ts\" && eslint --fix \"src/**/*.ts\"",
-    "lint": "eslint \"src/**/*.ts\""
+    "lint": "eslint \"src/**/*.ts\"",
+    "postinstall": "tsc --outDir ./lib"
   },
   "devDependencies": {
     "@types/jest": "^24.0.11",

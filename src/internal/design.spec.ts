@@ -12,6 +12,16 @@ describe('Design', () => {
     const resolveKey2 = async (injector: Injector<HasKey1>) => injector.key1.then(n => `key1 is ${n}`);
     const resolveKey3 = async (injector: Injector<HasKey2>) => injector.key2.then(s => s === 'key1 is 123');
 
+    describe('pure', () => {
+        it('enables us to reuse resolved container', async () => {
+            const { container } = await Design.bind('key1', () => 123).resolve({});
+            const { container: scoped } = await Design.pure(container)
+                .bind('key2', async injector => (await injector.key1) * 2)
+                .resolve({});
+            expect(scoped.key2).toBe(246);
+        });
+    });
+
     describe('bind', () => {
         it('infers existing container type as injectoable by default', async () => {
             await Design.bind('key1', () => 123)

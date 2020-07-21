@@ -1,5 +1,4 @@
 import { resolve } from './resolver';
-import { empty } from 'parsimmon';
 
 export interface Resource<T, D> {
     resolve: Resolve<T, D>;

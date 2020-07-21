@@ -105,6 +105,15 @@ export class Design<T extends Definition> {
     public resolve = (requirements: Requirements<T>): Promise<Result<T>> =>
         resolve(this.merge(Design.pure(requirements)).design);
 
+    public use = (requirements: Requirements<T>) => async <A>(
+        f: (container: Container<T>) => Promise<A>,
+    ): Promise<A> => {
+        const { container, finalize } = await this.resolve(requirements);
+        const result = await f(container);
+        await finalize();
+        return result;
+    };
+
     public static pure = <U extends { [key: string]: any }>(
         mapping: U,
     ): Design<{ [P in keyof U]: { dependencies: {}; value: U[P] } }> => {

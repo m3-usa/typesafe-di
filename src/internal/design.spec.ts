@@ -384,4 +384,27 @@ describe('Design', () => {
             expect(container.result).toBe(1200);
         });
     });
+
+    describe('use', () => {
+        it('executes given function in a resource safe manner', async () => {
+            const messages: string[] = [];
+            const design = Design.bind(
+                'resource',
+                async () => {
+                    messages.push('resource creating');
+                    return 'test-resource';
+                },
+                async () => {
+                    messages.push('resource finalizing');
+                },
+            );
+
+            const result = await design.use({})(async ({ resource }) => {
+                messages.push(`using resource: ${resource}`);
+                return 'processed';
+            });
+            expect(result).toEqual('processed');
+            expect(messages).toEqual(['resource creating', 'using resource: test-resource', 'resource finalizing']);
+        });
+    });
 });

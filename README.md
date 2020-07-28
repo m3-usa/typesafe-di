@@ -51,7 +51,7 @@ const { container } = await userDesign.resolve({ name: 'jooohn' });
 console.log(container.user); // { name: 'jooohn', age: 30 }
 ```
 
-The TypeScript compiler detects there are missing dependencies.
+The TypeScript compiler detects missing dependencies.
 
 ```typescript
 const userDesign = ...

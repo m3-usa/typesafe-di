@@ -406,5 +406,26 @@ describe('Design', () => {
             expect(result).toEqual('processed');
             expect(messages).toEqual(['resource creating', 'using resource: test-resource', 'resource finalizing']);
         });
+
+        it('executes given function even when promise rejected', async () => {
+            const messages: string[] = [];
+            const design = Design.bind(
+                'resource',
+                async () => {
+                    messages.push('resource creating');
+                    return 'test-resource';
+                },
+                async () => {
+                    messages.push('resource finalizing');
+                },
+            );
+
+            try {
+                await design.use({})(async () => {
+                    throw new Error('fail');
+                });
+            } catch (e) {}
+            expect(messages).toEqual(['resource creating', 'resource finalizing']);
+        });
     });
 });

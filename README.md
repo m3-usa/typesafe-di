@@ -12,88 +12,158 @@ yarn add typesafe-di
 
 # Getting Started
 
-### Design your depedencies
+First of all, build your design of an object dependency graph. `Design` is an immutable blueprint of an object graph which knows how to build each object.
 
 ```typescript
-type HasName = { name: string };
-type HasAge = { age: number };
+const pureDesign = Design
+    // `.bind` registers an object factory.
+    .bind('name', () => 'jooohn')
 
-// Design is an immutable blueprint of a container which knows how to build each item.
-const design = Design
-  .bind('age', () => 30)
-  // Injector<{ [key]: T }> is just a type alias of { [key]: Promise<T> }.
-  // Here, it means we need { name: string, age: number } to create a user.
-  .bind('user', async (injector: Injector<HasName & HasAge>) => new User(
-    await injector.name,
-    await injector.age,
-  ));
+    // You can register async functions.
+    .bind('futureAge', async () => 31);
 ```
 
-### Resolve the dependencies
+In order to register a function which depends on other objects, your factory should take an argument like the following.
 
 ```typescript
-// The design can resolve with missing values.
-const { container } = await design.resolve({ name: 'jooohn' });
-// { name: 'jooohn', age: 30, user: User { name: 'jooohn', age: 30 } }
-
-// If the dependencies are insufficient, its compile fails.
-const { container } = await design.resolve({}); // compile error! Property 'name' is missing in type {}
+const dependencyDesign = Design.bind(
+    'age',
+    // Under the food, `Injector<{ birthday: Date }>` is just an alias of `Injector<{ birthday: Promise<Date> }>`.
+    async (injector: Injector<{ birthday: Date }>): Promise<number> => {
+        // To get the value of `injector.birthday`, you have to await.
+        const birthday = await injector.birthday;
+        return calculateAgeFromBirthday(birthday);
+    },
+);
 ```
 
-### Design is composable
+Call `.resolve` with missing dependencies to instanciate the object graph.
 
 ```typescript
-const useCaseDesign = Design
-  .bind('createUser', async (injector: Injector<HasUserRepository>) => new CreateUser({
-    userRepository: await injector.userRepository
-  }));
+const userDesign = Design.bind('age', () => 30)
+    // `{ age: number }` is bound to this design already, so `name` is the only missing dependency.
+    .bind('user', async (injector: Injector<{ name: string; age: number }>) => ({
+        name: await injector.name,
+        age: await injector.age,
+    }));
 
-const productionAdapter = Design
-  .bind('userRepository', async (injector: Injector<HasDB>) => new DBUserRepository({
-    db: await injector.db
-  }));
-
-const testAdapter = Design
-  .bind('userRepository', () => new InMemoryUserRepository());
-
-// for production
-useCaseDesign.merge(productionAdapter).resolve({ db: productionDB });
-
-// for test
-useCaseDesign.merge(testAdapter).resolve({});
+const { container } = await userDesign.resolve({ name: 'jooohn' });
+console.log(container.user); // { name: 'jooohn', age: 30 }
 ```
 
-### injector assumes current design by default
+The TypeScript compiler detects there are missing dependencies.
 
 ```typescript
-Design
-  .bind('nums', async () => [1, 2, 3, 4, 5])
-  .bind('double', async () => (num: number) => num * 2)
-  // Here `injector` assumes existing `nums` and `double` are injectable by default.
-  .bind('implicit', async (injector) => {
-    const nums = await injector.nums;
-    const double = await injector.double;
-    return nums.map(double);
-  })
-  // Or you can specify requirements explicitly.
-  .bind('explicit', async (injector: Injector<{ bool: boolean }>) => !(await injector.bool));
+const userDesign = ...
+
+// Compile error since `name` is required but not given.
+const { container } = await design.resolve({});
 ```
 
-### Finalize resource
+# Design creation
 
 ```typescript
-// The third argument for `bind` is an optional finalizer of the resource.
-const design = Design
-  .bind('db', () => buildDB(), db => db.close)
-  .bind(
-    'repository',
-    async (injector: Injector<HasDB>) => new Repository(await injector.db),
-    repository => repository.close()
-  );
+// An empty design
+const empty = Design.empty;
 
-const { container, finalize } = design.resolve({});
+// From an existing mapping
+const pure = Design.pure({
+    name: 'jooohn',
+    age: 30,
+});
+```
 
-// Finalize calls finalizer from less-dependent resources to more-dependent resources.
-// In this case, it will call a finalizer for 'db' and then call one for 'repository'.
-await finalize();
+# Design composition
+
+```typescript
+type HasUserRepository = { userRepository: UserRepository };
+const useCaseDesign = Design.bind('changeName', async (injector: Injector<HasUserRepository>) => {
+    const userRepository = await injector.userRepository;
+    return async (id: string, newName: string) => {
+        const user = await userRepository.find(id);
+        await userRepository.save({ ...user, name: newName });
+    };
+});
+
+type HasDBConfig = { dbConfig: DBConfig };
+const productionAdapterDesign = Design.bind('userRepository', async (injector: Injector<HasDBConfig>) => {
+    const dbConfig = await injector.dbConfig;
+    return new DBUserRepository(dbConfig);
+});
+
+const productionConfigDesign = Design.bind('dbConfig', () => ({
+    user: 'dbuser',
+    password: 'xxx',
+}));
+
+// Merge two design
+const productionUseCaseDesign = useCaseDesign.merge(productionAdapterDesign).merge(productionConfigDesign);
+```
+
+# Resource management
+
+One of the typical use cases of DI container is to manage the lifecycle of created objects. You can register a function to finalize a resource as the third argument of the `.bind` method.
+
+```typescript
+const resourcesDesign = Design.bind(
+    'resource1',
+    async () => {
+        const resource1 = new Resource1();
+        console.log('initializing resource 1');
+        await resource1.initialize();
+        return resource1;
+    },
+    async resource1 => {
+        console.log('closing resource 1');
+        await resource1.close();
+    },
+).bind(
+    'resource2',
+    async (injector: Injector<{ resource1: Resource1 }>) => {
+        const resource1 = await injector.resource1;
+        const resource2 = new Resource2({ underlying: resource1 });
+        console.log('initializing resource 2');
+        await resource2.initialize();
+        return resource2;
+    },
+    async resource2 => {
+        console.log('closing resource 2');
+        await resource2.close();
+    },
+);
+```
+
+In that case, it is recommended to call `.use` method instead of `.resolve` to let `typesafe-di` clean up the created resources.
+
+```typescript
+// `.use` automatically calls registered finalizers in reverse order of its creation.
+const result = await resourcesDesign.use({})(async ({ resource1, resource2 }) => {
+    // ...
+    console.log('do something with resource 1 and resource 2');
+    // ...
+    return 'done';
+});
+console.log(result);
+```
+
+The example above will write console.log in the following order.
+
+```
+initializing resource 1
+initializing resource 2
+do something with resource 1 and resource 2
+closing resource 2
+closing resource 1
+```
+
+You can control when to call finalizers if you instantiate the container by `.resolve`.
+
+```typescript
+const { container, finalize } = await resourcesDesign.resolve({});
+
+...
+
+process.on('SIGINT', () => {
+  finalize().catch(console.error);
+});
 ```

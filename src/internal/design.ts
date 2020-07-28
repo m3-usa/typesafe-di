@@ -109,9 +109,12 @@ export class Design<T extends Definition> {
         f: (container: Container<T>) => Promise<A>,
     ): Promise<A> => {
         const { container, finalize } = await this.resolve(requirements);
-        const result = await f(container);
-        await finalize();
-        return result;
+        try {
+            const result = await f(container);
+            return result;
+        } finally {
+            await finalize();
+        }
     };
 
     public static pure = <U extends { [key: string]: any }>(

@@ -1,6 +1,6 @@
 # typesafe-di
 
-[![npm version](https://badge.fury.io/js/typesafe-di.svg)](https://badge.fury.io/js/typesafe-di)
+[![npm version](https://img.shields.io/npm/v/typesafe-di.svg?style=flat)](https://www.npmjs.com/package/typesafe-di)
 [![CircleCI](https://circleci.com/gh/m3dev/typesafe-di.svg?style=svg)](https://circleci.com/gh/m3dev/typesafe-di)
 
 A zero-dependency simple DI library to create DI containers in typesafe way.

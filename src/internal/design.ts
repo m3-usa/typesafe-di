@@ -94,6 +94,12 @@ export class Design<T extends Definition> {
         return new Design(underlying);
     };
 
+    public bindResource = <K extends string, V extends { finalize(): Promise<void> }, D = {}>(
+        key: K,
+        resolvable: Resolvable<V, Container<T> & D>,
+    ): Design<T & { [key in K]: { dependencies: D; value: V } }> =>
+        this.bind(key, resolvable, resource => resource.finalize());
+
     public merge = <U extends Definition>(that: Design<U>): Design<T & U> => {
         const underlying: Underlying<T & U> = {
             ...this.design,
@@ -133,4 +139,5 @@ export class Design<T extends Definition> {
     public static empty: Design<{}> = new Design({});
 
     public static bind = Design.empty.bind;
+    public static bindResource = Design.empty.bindResource;
 }

@@ -1,4 +1,5 @@
 import { Design, Injector } from './design';
+import { injectClass } from './helper';
 
 describe('Design', () => {
     interface HasKey1 {
@@ -36,6 +37,31 @@ describe('Design', () => {
                 .bind('explicit', async (injector: Injector<{ key0: number }>) => await injector.key0)
                 .resolve({ key0: 0 });
         });
+    });
+
+    describe('bindResource', () => {
+        it('registers finalize as finalizer', async () => {
+            let finalized = false;
+            class Resource {
+                public async finalize(): Promise<void> {
+                    finalized = true;
+                }
+            }
+            const {
+                container: { resource },
+                finalize,
+            } = await Design.bindResource('resource', injectClass(Resource, [])).resolve({});
+            expect(resource instanceof Resource).toBe(true);
+            expect(finalized).toBe(false);
+
+            await finalize();
+
+            expect(finalized).toBe(true);
+        });
+
+        class NotResource {}
+        // @ts-expect-error
+        Design.bindResource('notResource', injectClass(NotResource, []));
     });
 
     describe('resolve', () => {

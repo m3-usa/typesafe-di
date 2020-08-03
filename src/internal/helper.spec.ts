@@ -1,5 +1,5 @@
 import { Design } from './design';
-import { inject, injectClass, pick } from './helper';
+import { inject, injectClass } from './helper';
 
 interface MyClassParams {
     num: number;
@@ -20,22 +20,6 @@ class MyClass {
         return new MyClass(params);
     }
 }
-
-describe('pick', () => {
-    it('resolves all Promise for given keys', async () => {
-        const injector = {
-            num: Promise.resolve(1),
-            str: Promise.resolve('a'),
-            optionalBool: Promise.resolve(true),
-        };
-
-        const result = await pick(injector, ['num', 'optionalBool']);
-        expect(result).toEqual({ num: 1, optionalBool: true });
-
-        // @ts-expect-error
-        result.str;
-    });
-});
 
 describe('inject', () => {
     it('creates a function for Design#bind', async () => {

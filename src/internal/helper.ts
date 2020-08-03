@@ -3,10 +3,10 @@ type InjectorFor<T, K extends keyof T> = Exclude<keyof T, K | OptionalKeys<T>> e
     ? { [P in K]: Promise<T[P]> }
     : never;
 
-export async function pick<T, K extends keyof T>(
+async function pick<T, K extends keyof T>(
     injector: { [P in K]: Promise<T[P]> },
     keys: K[],
-): Promise<{ [P in K]: T[P] }> {
+): Promise<Readonly<{ [P in K]: T[P] }>> {
     return Object.fromEntries(await Promise.all(keys.map(async name => [name, await injector[name]])));
 }
 

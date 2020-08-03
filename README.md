@@ -91,18 +91,6 @@ Design.bind('foo', async (injector: Injector<{ bar: Bar, baz: Baz }>) => {
 });
 ```
 
-`pick` helps you await multiple `injector` values.
- 
-```typescript
-import { pick } from 'typesafe-di';
-
-Design.bind('foo', async (injector: Injector<{ bar: Bar, baz: Baz }>) => {
-    return new Foo(pick(injector, ['bar', 'baz']));
-});
-```
-
-You need to pass which keys from `injector` should be resolved, which is another boilerplate since we've already mentioned them as `injector`'s type. This is a limitation of TypeScript which won't carry type information to runtime.
-
 `inject` helps you create a `bind`-able function from a function which receives non-promise values as an argument.
 
 ```typescript
@@ -124,6 +112,8 @@ import { injectClass } from 'typesafe-di';
 
 Design.bind('foo', injectClass(Foo, ['bar, baz']));
 ```
+
+You need to pass which keys from `injector` should be resolved, which is another boilerplate since we've already mentioned them as `injector`'s type. This is a limitation of TypeScript which doens't carry type information to runtime.
 
 # Design composition
 

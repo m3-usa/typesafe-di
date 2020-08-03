@@ -73,6 +73,48 @@ const pure = Design.pure({
 });
 ```
 
+### Helper functions
+
+You may notice that you have to write boilerplates to await `injector` values to be resolved many times. You can use some helper functions to mitigate them.
+
+```typescript
+class Foo {
+    constructor(params: { bar: Bar, baz: Baz }) {}
+}
+
+
+Design.bind('foo', async (injector: Injector<{ bar: Bar, baz: Baz }>) => {
+    return new Foo({
+        bar: await injector.bar,
+        baz: await injector.baz,
+    });
+});
+```
+
+`inject` helps you create a `bind`-able function from a function which receives non-promise values as an argument.
+
+```typescript
+import { inject } from 'typesafe-di';
+
+Design.bind('foo', inject((params: { bar: Bar, baz: Baz }) => new Foo(params), ['bar, baz']));
+
+// You can give an async function to `inject`. 
+Design.bind('foo', inject(async (params: { bar: Bar, baz: Baz }) => {
+    await doSomeInitialization(bar);
+    new Foo(params);
+}, ['bar, baz']));
+```
+
+You can use `injectClass` if you're binding `class` which receives key-value mapping as its constructor argument.
+
+```typescript
+import { injectClass } from 'typesafe-di';
+
+Design.bind('foo', injectClass(Foo, ['bar, baz']));
+```
+
+You need to pass which keys from `injector` should be resolved, which is another boilerplate since we've already mentioned them as `injector`'s type. This is a limitation of TypeScript which doens't carry type information to runtime.
+
 # Design composition
 
 ```typescript
@@ -166,4 +208,43 @@ const { container, finalize } = await resourcesDesign.resolve({});
 process.on('SIGINT', () => {
   finalize().catch(console.error);
 });
+```
+
+### Binding resources
+
+You can use `bindResource` instead of normal `bind` which automatically registers `finalize` method as the finalizer.
+
+```typescript
+class Finalizable {
+    public async finalize() {
+        console.log('cleanup');
+    }
+}
+
+// These two designs are equivalent.
+Design.bind('finalizable', () => new Finalizable(), resource => resource.finalize());
+Design.bindResource('finalizable', () => new Finalizable());
+```
+
+The combination of `inject` and `bindResource` lets you easily bind your own resource class which needs initialization and finalization to a design.
+
+```typescript
+class Resource {
+    #connectionPool: ConnectionPool;
+
+    constructor(connectionPool: ConnectionPool) {
+        this.#connectionPool = connectionPool;
+    }
+    
+    public async finalize() {
+        await this.#connectionPool.close();
+    }
+
+    public static async initialize(params: { config: Config }): Promise<Resource> {
+        const connectionPool = await createConnectionPool(params.config);
+        return new Resource(connectionPool);
+    }
+}
+
+Design.bindResource('resource', inject(Resource.initialize, ['config']));
 ```

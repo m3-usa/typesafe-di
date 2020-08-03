@@ -232,8 +232,8 @@ class Finalizable {
 }
 
 // These two designs are equivalent.
-Design.bind('finalizable', injectClass(Finalizable, []), resource => resource.finalize());
-Design.bindResource('finalizable', injectClass(Finalizable, []));
+Design.bind('finalizable', () => new Finalizable(), resource => resource.finalize());
+Design.bindResource('finalizable', () => new Finalizable());
 ```
 
 The combination of `inject` and `bindResource` lets you easily bind your own resource class which needs initialization and finalization to a design.
@@ -256,5 +256,5 @@ class Resource {
     }
 }
 
-Design.bindResource('resource', inject(Resource.initialize, ['config']))
+Design.bindResource('resource', inject(Resource.initialize, ['config']));
 ```

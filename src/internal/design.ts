@@ -1,6 +1,6 @@
 import { resolve } from './resolver';
 
-export interface Resource<T, D> {
+export interface Resource<T, D extends {}> {
     resolve: Resolve<T, D>;
     finalize: (item: T) => Promise<void>;
 }
@@ -16,13 +16,13 @@ export interface Definition {
 
 export type Injector<T extends { [key: string]: any }> = { [P in keyof T]: Promise<T[P]> };
 
-export type Resolve<V, D> = (injector: Injector<D>) => Promise<V>;
+export type Resolve<V, D extends {}> = (injector: Injector<D>) => Promise<V>;
 
 export type PromisesHandler = (ps: Promise<void>[]) => Promise<void>;
 
-type Resolvable<V, D> = (injector: Injector<D>) => V | Promise<V>;
+type Resolvable<V, D extends {}> = (injector: Injector<D>) => V | Promise<V>;
 
-const toResource = <V, D>(
+const toResource = <V, D extends {}>(
     resolvable: Resolvable<V, D>,
     finalize: (instance: V) => Promise<void> = () => Promise.resolve(),
 ): Resource<V, D> => ({
@@ -82,7 +82,7 @@ export type Underlying<T extends Definition> = { [P in keyof T]: Resource<T[P]['
 export class Design<T extends Definition> {
     private constructor(public readonly design: Underlying<T>) {}
 
-    public bind = <K extends string, V, D = {}>(
+    public bind = <K extends string, V, D extends {} = {}>(
         key: K,
         resolvable: Resolvable<V, Container<T> & D>,
         finalize: (item: V) => Promise<void> = () => Promise.resolve(),
@@ -94,7 +94,7 @@ export class Design<T extends Definition> {
         return new Design(underlying);
     };
 
-    public bindResource = <K extends string, V extends { finalize(): Promise<void> }, D = {}>(
+    public bindResource = <K extends string, V extends { finalize(): Promise<void> }, D extends {} = {}>(
         key: K,
         resolvable: Resolvable<V, Container<T> & D>,
     ): Design<T & { [key in K]: { dependencies: D; value: V } }> =>

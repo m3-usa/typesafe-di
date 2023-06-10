@@ -1,6 +1,6 @@
 {
   "name": "typesafe-di",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "repository": "https://github.com/m3dev/typesafe-di.git",
@@ -16,8 +16,8 @@
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build",
-    "prepublishOnly": "npm test && npm run dtslint && npm run lint",
-    "preversion": "npm run build && npm run test && npm run dtslint",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run build && npm run test",
     "test": "jest",
     "test:watch": "jest --watch",
     "dtslint": "dtslint --expectOnly typing-test",

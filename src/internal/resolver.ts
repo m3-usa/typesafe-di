@@ -36,7 +36,7 @@ const wrapResolve = <T extends Definition, K extends keyof T>(context: {
                 if (e.hasOwnProperty('__root_error__')) {
                     throw e;
                 } else {
-                    const rootError = new Error(`failed to resolve "${key}" because: ${e.message}`);
+                    const rootError = new Error(`failed to resolve "${key.toString()}" because: ${e.message}`);
                     Object.assign(rootError, { __root_error__: true }); // eslint-disable-line @typescript-eslint/camelcase
                     throw rootError;
                 }

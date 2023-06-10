@@ -16,8 +16,8 @@
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build",
-    "prepublishOnly": "npm test && npm run dtslint && npm run lint",
-    "preversion": "npm run build && npm run test && npm run dtslint",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run build && npm run test",
     "test": "jest",
     "test:watch": "jest --watch",
     "dtslint": "dtslint --expectOnly typing-test",

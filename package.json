@@ -57,5 +57,8 @@
       "node_modules",
       "typing-test"
     ]
+  },
+  "dependencies": {
+    "tsd": "^0.28.1"
   }
 }

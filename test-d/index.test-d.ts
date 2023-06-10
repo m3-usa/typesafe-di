@@ -1,4 +1,5 @@
-import { Design, Injector } from 'typesafe-di';
+import { Design, Injector } from '../src';
+import { expectError } from 'tsd';
 
 type HasKey0<T> = { key0: T };
 
@@ -6,15 +7,15 @@ const baseDesign = Design.bind('key1', (injector: Injector<HasKey0<string>>) => 
 
 const compiles = baseDesign.resolve({ key0: 'string' });
 
-const invalidType = baseDesign.resolve({ key0: 123 }); // $ExpectError
+expectError(baseDesign.resolve({ key0: 123 })); // invalid type
 
-const insufficientRequirements = baseDesign.resolve({}); // $ExpectError
+expectError(baseDesign.resolve({})); // insufficient requirements
 
-const conflictedInjectorType = baseDesign
+expectError(baseDesign
     .bind('key2', (injector: Injector<HasKey0<number>>) => injector.key0)
-    .resolve({ key0: 'abc' }); // $ExpectError
+    .resolve({ key0: 'abc' })); // conflicting injector type
 
-const conflictedResolverType = baseDesign.bind('key0', () => 123).resolve({}); // $ExpectError
+expectError(baseDesign.bind('key0', () => 123).resolve({})); // conflicting resolver type
 
 const implicitAndExplicitInjector = Design.bind('nums', async () => [1, 2, 3, 4, 5])
     .bind('double', async () => (num: number) => num * 2)
@@ -29,6 +30,6 @@ const implicitAndExplicitInjector = Design.bind('nums', async () => [1, 2, 3, 4,
     .resolve({ bool: true });
 
 const zeroDependencies = Design.bind('zero', () => 3);
-Design.bind('needsA', async (injector: Injector<{ a: number }>) => await injector.a)
+expectError(Design.bind('needsA', async (injector: Injector<{ a: number }>) => await injector.a)
     .merge(zeroDependencies)
-    .resolve({}); // $ExpectError
+    .resolve({})); // zero dependencies

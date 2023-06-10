@@ -192,7 +192,7 @@ describe('Design', () => {
                 try {
                     await Promise.all(ps);
                 } catch (e) {
-                    expect(e.message).toEqual('fails');
+                    expect((e as Error).message).toEqual('fails');
                 }
             });
         });

@@ -10,7 +10,7 @@ describe('DAG', () => {
             try {
                 dag.addEdge('4', '1');
             } catch (e) {
-                expect(e.message).toEqual('cyclic dependency detected: 4 -> 1 -> 2 -> 3 -> 4');
+                expect((e as Error).message).toEqual('cyclic dependency detected: 4 -> 1 -> 2 -> 3 -> 4');
             }
         });
     });

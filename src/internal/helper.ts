@@ -10,12 +10,12 @@ async function pick<T, K extends keyof T>(
     return Object.fromEntries(await Promise.all(keys.map(async name => [name, await injector[name]])));
 }
 
-export const inject = <T, K extends keyof T, V>(f: (params: { [P in K]: T[P] }) => V | Promise<V>, keys: K[]) => async (
-    injector: InjectorFor<T, K>,
-): Promise<V> => {
-    const params = await pick(injector, keys);
-    return f(params);
-};
+export const inject =
+    <T, K extends keyof T, V>(f: (params: { [P in K]: T[P] }) => V | Promise<V>, keys: K[]) =>
+    async (injector: InjectorFor<T, K>): Promise<V> => {
+        const params = await pick(injector, keys);
+        return f(params);
+    };
 
 export const injectClass = <T, K extends keyof T, V>(Class: new (params: { [P in K]: T[P] }) => V, keys: K[]) =>
     inject((params: { [P in K]: T[P] }) => new Class(params), keys);

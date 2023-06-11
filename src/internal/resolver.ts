@@ -9,7 +9,7 @@ const bindInjector = <T extends Definition>(wrapped: WrappedInjector<T>, depende
     const injector: Injector<T> = {} as any;
     for (const key in wrapped) {
         Object.defineProperty(injector, key, {
-            get: function() {
+            get: function () {
                 return wrapped[key](dependedBy);
             },
         });
@@ -17,34 +17,36 @@ const bindInjector = <T extends Definition>(wrapped: WrappedInjector<T>, depende
     return injector;
 };
 
-const wrapResolve = <T extends Definition, K extends keyof T>(context: {
-    underlying: Underlying<T>;
-    dag: DAG<keyof T>;
-    wrappedInjector: WrappedInjector<T>;
-}) => (key: K) => {
-    const { underlying, dag, wrappedInjector } = context;
-    let resolved: Promise<Value<T, typeof key>>;
-    return (dependedBy?: keyof T) => {
-        if (typeof dependedBy === 'undefined') {
-            dag.addNode(key);
-        } else {
-            dag.addEdge(dependedBy, key);
-        }
-        if (typeof resolved === 'undefined') {
-            const injector = bindInjector(wrappedInjector, key);
-            resolved = underlying[key].resolve(injector as any).catch(e => {
-                if (e.hasOwnProperty('__root_error__')) {
-                    throw e;
-                } else {
-                    const rootError = new Error(`failed to resolve "${key.toString()}" because: ${e.message}`);
-                    Object.assign(rootError, { __root_error__: true }); // eslint-disable-line @typescript-eslint/camelcase
-                    throw rootError;
-                }
-            });
-        }
-        return resolved;
+const wrapResolve =
+    <T extends Definition, K extends keyof T>(context: {
+        underlying: Underlying<T>;
+        dag: DAG<keyof T>;
+        wrappedInjector: WrappedInjector<T>;
+    }) =>
+    (key: K) => {
+        const { underlying, dag, wrappedInjector } = context;
+        let resolved: Promise<Value<T, typeof key>>;
+        return (dependedBy?: keyof T) => {
+            if (typeof dependedBy === 'undefined') {
+                dag.addNode(key);
+            } else {
+                dag.addEdge(dependedBy, key);
+            }
+            if (typeof resolved === 'undefined') {
+                const injector = bindInjector(wrappedInjector, key);
+                resolved = underlying[key].resolve(injector as any).catch(e => {
+                    if (e.hasOwnProperty('__root_error__')) {
+                        throw e;
+                    } else {
+                        const rootError = new Error(`failed to resolve "${key.toString()}" because: ${e.message}`);
+                        Object.assign(rootError, { __root_error__: true }); // eslint-disable-line @typescript-eslint/camelcase
+                        throw rootError;
+                    }
+                });
+            }
+            return resolved;
+        };
     };
-};
 
 const buildContainer = async <T extends Definition>(injector: WrappedInjector<T>): Promise<Container<T>> => {
     const container: Container<T> = {} as any;

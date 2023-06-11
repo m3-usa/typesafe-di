@@ -155,10 +155,12 @@ describe('Design', () => {
 
         it('can finalize according to the dependent order', async () => {
             const called: string[] = [];
-            const callWith = <T>(key: string, value: T) => async (item: T) => {
-                expect(item).toEqual(value);
-                called.push(key);
-            };
+            const callWith =
+                <T>(key: string, value: T) =>
+                async (item: T) => {
+                    expect(item).toEqual(value);
+                    called.push(key);
+                };
 
             const design = Design.bind('key1', resolveKey1, callWith('key1', 123))
                 .bind('key2', resolveKey2, callWith('key2', 'key1 is 123'))

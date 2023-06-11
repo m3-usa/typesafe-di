@@ -31,22 +31,21 @@ const toResource = <V, D extends {}>(
 });
 
 type ExactOneValue<T> = { [P in keyof T]: Exclude<T[keyof T], T[P]> extends never ? T[P] : never }[keyof T];
-type DependentValue<T extends Definition, K> = ExactOneValue<
-    { [P in keyof T]: K extends keyof T[P]['dependencies'] ? T[P]['dependencies'][K] : never }
->;
+type DependentValue<T extends Definition, K> = ExactOneValue<{
+    [P in keyof T]: K extends keyof T[P]['dependencies'] ? T[P]['dependencies'][K] : never;
+}>;
 type BoundKeys<T extends Definition> = Extract<{ [P in keyof T]: keyof T[P]['dependencies'] }[keyof T], keyof T>;
 type MissingKeys<T extends Definition> = Exclude<{ [P in keyof T]: keyof T[P]['dependencies'] }[keyof T], keyof T>;
 type MissingDependencies<T extends Definition> = { [P in MissingKeys<T>]: DependentValue<T, P> };
 
 type ConflictedKeys<T extends Definition> = {
-    [P in BoundKeys<T>]: T[P]['value'] extends DependentValue<T, P> ? never : P
+    [P in BoundKeys<T>]: T[P]['value'] extends DependentValue<T, P> ? never : P;
 }[BoundKeys<T>];
 
-type Requirements<T extends Definition> = MissingDependencies<T> &
-    {
-        // Prohibit from instantiation if required type conflicts.
-        [P in ConflictedKeys<T>]: never
-    };
+type Requirements<T extends Definition> = MissingDependencies<T> & {
+    // Prohibit from instantiation if required type conflicts.
+    [P in ConflictedKeys<T>]: never;
+};
 
 export interface Result<T extends Definition> {
     container: Container<T>;
@@ -111,17 +110,17 @@ export class Design<T extends Definition> {
     public resolve = (requirements: Requirements<T>): Promise<Result<T>> =>
         resolve(this.merge(Design.pure(requirements)).design);
 
-    public use = (requirements: Requirements<T>) => async <A>(
-        f: (container: Container<T>) => Promise<A>,
-    ): Promise<A> => {
-        const { container, finalize } = await this.resolve(requirements);
-        try {
-            const result = await f(container);
-            return result;
-        } finally {
-            await finalize();
-        }
-    };
+    public use =
+        (requirements: Requirements<T>) =>
+        async <A>(f: (container: Container<T>) => Promise<A>): Promise<A> => {
+            const { container, finalize } = await this.resolve(requirements);
+            try {
+                const result = await f(container);
+                return result;
+            } finally {
+                await finalize();
+            }
+        };
 
     public static pure = <U extends { [key: string]: any }>(
         mapping: U,

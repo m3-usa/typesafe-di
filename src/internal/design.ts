@@ -1,6 +1,6 @@
 import { resolve } from './resolver';
 
-export interface Resource<T, D extends {}> {
+export interface Resource<T, D extends NonNullable<unknown>> {
     resolve: Resolve<T, D>;
     finalize: (item: T) => Promise<void>;
 }
@@ -16,13 +16,13 @@ export interface Definition {
 
 export type Injector<T extends { [key: string]: any }> = { [P in keyof T]: Promise<T[P]> };
 
-export type Resolve<V, D extends {}> = (injector: Injector<D>) => Promise<V>;
+export type Resolve<V, D extends NonNullable<unknown>> = (injector: Injector<D>) => Promise<V>;
 
 export type PromisesHandler = (ps: Promise<void>[]) => Promise<void>;
 
-type Resolvable<V, D extends {}> = (injector: Injector<D>) => V | Promise<V>;
+type Resolvable<V, D extends NonNullable<unknown>> = (injector: Injector<D>) => V | Promise<V>;
 
-const toResource = <V, D extends {}>(
+const toResource = <V, D extends NonNullable<unknown>>(
     resolvable: Resolvable<V, D>,
     finalize: (instance: V) => Promise<void> = () => Promise.resolve(),
 ): Resource<V, D> => ({
@@ -81,7 +81,7 @@ export type Underlying<T extends Definition> = { [P in keyof T]: Resource<T[P]['
 export class Design<T extends Definition> {
     private constructor(public readonly design: Underlying<T>) {}
 
-    public bind = <K extends string, V, D extends {} = {}>(
+    public bind = <K extends string, V, D extends NonNullable<unknown> = NonNullable<unknown>>(
         key: K,
         resolvable: Resolvable<V, Container<T> & D>,
         finalize: (item: V) => Promise<void> = () => Promise.resolve(),
@@ -93,7 +93,11 @@ export class Design<T extends Definition> {
         return new Design(underlying);
     };
 
-    public bindResource = <K extends string, V extends { finalize(): Promise<void> }, D extends {} = {}>(
+    public bindResource = <
+        K extends string,
+        V extends { finalize(): Promise<void> },
+        D extends NonNullable<unknown> = NonNullable<unknown>,
+    >(
         key: K,
         resolvable: Resolvable<V, Container<T> & D>,
     ): Design<T & { [key in K]: { dependencies: D; value: V } }> =>
@@ -124,8 +128,8 @@ export class Design<T extends Definition> {
 
     public static pure = <U extends { [key: string]: any }>(
         mapping: U,
-    ): Design<{ [P in keyof U]: { dependencies: {}; value: U[P] } }> => {
-        const design: Underlying<{ [P in keyof U]: { dependencies: {}; value: U[P] } }> = {} as any;
+    ): Design<{ [P in keyof U]: { dependencies: NonNullable<unknown>; value: U[P] } }> => {
+        const design: Underlying<{ [P in keyof U]: { dependencies: NonNullable<unknown>; value: U[P] } }> = {} as any;
         for (const key in mapping) {
             design[key] = {
                 resolve: () => Promise.resolve(mapping[key]),
@@ -135,7 +139,7 @@ export class Design<T extends Definition> {
         return new Design(design);
     };
 
-    public static empty: Design<{}> = new Design({});
+    public static empty: Design<NonNullable<unknown>> = new Design({});
 
     public static bind = Design.empty.bind;
     public static bindResource = Design.empty.bindResource;

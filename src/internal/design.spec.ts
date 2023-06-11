@@ -60,7 +60,7 @@ describe('Design', () => {
         });
 
         class NotResource {}
-        // @ts-expect-error
+        // @ts-expect-error Should not be assignable to Resource
         Design.bindResource('notResource', injectClass(NotResource, []));
     });
 

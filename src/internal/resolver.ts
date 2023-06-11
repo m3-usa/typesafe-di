@@ -39,7 +39,7 @@ const wrapResolve =
                         throw e;
                     } else {
                         const rootError = new Error(`failed to resolve "${key.toString()}" because: ${e.message}`);
-                        Object.assign(rootError, { __root_error__: true }); // eslint-disable-line @typescript-eslint/camelcase
+                        Object.assign(rootError, { __root_error__: true });
                         throw rootError;
                     }
                 });

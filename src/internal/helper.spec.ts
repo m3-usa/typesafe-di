@@ -58,7 +58,8 @@ describe('inject', () => {
         expect(myNumber).toBe(1);
     });
 
-    // @ts-expect-error
+    // @ts-expect-error Checking for redundant argument
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     inject(() => {}, ['redundant']);
 });
 
@@ -92,12 +93,12 @@ describe('injectClass', () => {
         });
     });
 
-    // @ts-expect-error
+    // @ts-expect-error Should not allow omitting required values
     injectClass(MyClass, []);
 
-    // @ts-expect-error
+    // @ts-expect-error Should not allow omitting required value
     injectClass(MyClass, ['num']);
 
-    // @ts-expect-error
+    // @ts-expect-error Should not allow redundant value
     injectClass(MyClass, ['num', 'str', 'redundant']);
 });

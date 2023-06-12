@@ -6,8 +6,6 @@
 export class DAG<T> {
     private map: Map<T, Set<T>> = new Map();
 
-    public constructor() {}
-
     public addNode = (node: T) => {
         this.ensureNode(node);
     };

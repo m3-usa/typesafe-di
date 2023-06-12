@@ -1,10 +1,14 @@
 {
   "name": "typesafe-di",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "repository": "https://github.com/m3dev/typesafe-di.git",
   "author": "jooohn <jooohn12341234@gmail.com>",
+  "collaborators": [
+    "jooohn <jooohn12341234@gmail.com>",
+    "btakashi <b.takashi@gmail.com>"
+  ],
   "license": "MIT",
   "keywords": [
     "di",

@@ -24,3 +24,7 @@ yarn lint
 ```
 
 Do not run `npm version` or `npm publish`. A person cuts releases.
+
+## Decisions
+
+Before a change that touches architecture or a shared choice, read `docs/decisions/README.md`. Open only the records whose rows bear on the change. Do not accept a decision yourself; propose it in a pull request.

@@ -46,6 +46,7 @@ npm (distribution), CircleCI (lint and tests), Dependabot (dependency updates).
 
 - [CONTRIBUTING.md](CONTRIBUTING.md): branches, pull requests, commits and releases.
 - [AGENTS.md](AGENTS.md): rules for coding agents.
+- [docs/decisions/README.md](docs/decisions/README.md): architectural decisions for this repository.
 
 ## Legacy README (unverified)
 

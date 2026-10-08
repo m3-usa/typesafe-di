@@ -48,6 +48,12 @@ npm (distribution), CircleCI (lint and tests), Dependabot (dependency updates).
 - [AGENTS.md](AGENTS.md): rules for coding agents.
 - [docs/decisions/README.md](docs/decisions/README.md): architectural decisions for this repository.
 
+### Gotchas
+
+- This repository is public. Don't add internal hostnames, account IDs, service names or other non-public detail to code, docs, commits or pull requests.
+- The library has no runtime dependencies. Don't add one.
+- M3 USA services pick up a change on their next install of a new release. Treat a change to the public API (`src/index.ts` exports and their types) as breaking unless you can show it is not.
+
 ## Legacy README (unverified)
 
 Carried over unchanged from the previous README. Nobody has confirmed these instructions recently. Move an item up into the sections above once you have run it, and delete what no longer works.

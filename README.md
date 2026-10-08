@@ -1,17 +1,75 @@
 # typesafe-di
 
+A zero-dependency dependency-injection library for TypeScript. You describe an object graph as an immutable `Design`, and the compiler checks that every dependency is supplied before it resolves into a typed container.
+
+## System context
+
+Last verified 2026-10-02.
+
+| | |
+|---|---|
+| What it does | A TypeScript library, published to npm as [`typesafe-di`](https://www.npmjs.com/package/typesafe-di). It has no runtime of its own |
+| Status | Maintained for its users, not under active development. Latest release `0.4.3` (2023-10). Used in production by M3 USA services |
+| Owner | Brian Hooper |
+| Runs on | Inside the applications that depend on it. Nothing is deployed from this repository |
+| Deploys | Released to npm by hand: `npm version` runs build, tests, type tests (`tsd`) and lint, then tags the release; `npm publish` runs tests, type tests and lint again before publishing. CircleCI runs lint and tests on every push |
+
+### Environments
+
+| Environment | Where |
+|---|---|
+| npm registry | [`typesafe-di`](https://www.npmjs.com/package/typesafe-di), public |
+| CI | CircleCI (`.circleci/config.yml`), image `circleci/node:12` |
+| Local | `yarn install`, then `yarn test`, `yarn tsd` and `yarn lint` |
+
+### Data stores
+
+None. The library does no I/O.
+
+### Connections
+
+| Direction | System | Mechanism | What flows |
+|---|---|---|---|
+| Used by | M3 USA services | npm dependency | Dependency wiring at startup, and resource finalization at shutdown |
+
+### Third-party services
+
+npm (distribution), CircleCI (lint and tests), Dependabot (dependency updates).
+
+### Known gaps
+
+- The CI image `circleci/node:12` is past end of life. `dtslint` is disabled in CI.
+- `package.json` `repository` and the README badges point to `github.com/m3dev/typesafe-di`, the repository's former home. GitHub redirects that address here.
+- **To confirm**: who holds npm publish rights for `typesafe-di`.
+
+## Working in this repository
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): branches, pull requests, commits and releases.
+- [AGENTS.md](AGENTS.md): rules for coding agents.
+- [docs/decisions/README.md](docs/decisions/README.md): architectural decisions for this repository.
+
+### Gotchas
+
+- This repository is public. Don't add internal hostnames, account IDs, service names or other non-public detail to code, docs, commits or pull requests.
+- The library has no runtime dependencies. Don't add one.
+- M3 USA services pick up a change on their next install of a new release. Treat a change to the public API (`src/index.ts` exports and their types) as breaking unless you can show it is not.
+
+## Legacy README (unverified)
+
+Carried over unchanged from the previous README. Nobody has confirmed these instructions recently. Move an item up into the sections above once you have run it, and delete what no longer works.
+
 [![npm version](https://img.shields.io/npm/v/typesafe-di.svg?style=flat)](https://www.npmjs.com/package/typesafe-di)
 [![CircleCI](https://circleci.com/gh/m3dev/typesafe-di.svg?style=svg)](https://circleci.com/gh/m3dev/typesafe-di)
 
 A zero-dependency simple DI library to create DI containers in typesafe way.
 
-# installation
+### installation
 
 ```
 yarn add typesafe-di
 ```
 
-# Getting Started
+### Getting Started
 
 First of all, build your design of an object dependency graph. `Design` is an immutable blueprint of an object graph which knows how to build each object.
 
@@ -61,7 +119,7 @@ const userDesign = ...
 const { container } = await design.resolve({});
 ```
 
-# Design creation
+### Design creation
 
 ```typescript
 // An empty design
@@ -74,7 +132,7 @@ const pure = Design.pure({
 });
 ```
 
-### Helper functions
+##### Helper functions
 
 You may notice that you have to write boilerplates to await `injector` values to be resolved many times. You can use some helper functions to mitigate them.
 
@@ -116,7 +174,7 @@ Design.bind('foo', injectClass(Foo, ['bar, baz']));
 
 You need to pass which keys from `injector` should be resolved, which is another boilerplate since we've already mentioned them as `injector`'s type. This is a limitation of TypeScript which doens't carry type information to runtime.
 
-# Design composition
+### Design composition
 
 ```typescript
 type HasUserRepository = { userRepository: UserRepository };
@@ -143,7 +201,7 @@ const productionConfigDesign = Design.bind('dbConfig', () => ({
 const productionUseCaseDesign = useCaseDesign.merge(productionAdapterDesign).merge(productionConfigDesign);
 ```
 
-# Resource management
+### Resource management
 
 One of the typical use cases of DI container is to manage the lifecycle of created objects. You can register a function to finalize a resource as the third argument of the `.bind` method.
 
@@ -211,7 +269,7 @@ process.on('SIGINT', () => {
 });
 ```
 
-### Binding resources
+##### Binding resources
 
 You can use `bindResource` instead of normal `bind` which automatically registers `finalize` method as the finalizer.
 
